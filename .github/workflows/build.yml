@@ -22,6 +22,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - id: version
+        # Dependabot-bumpable tag (YYYY.M.D.run) for gitops pins.
+        run: echo "tag=$(date -u +%Y.%-m.%-d).${{ github.run_number }}" >> "$GITHUB_OUTPUT"
+
       - uses: docker/build-push-action@v5
         with:
           context: .
@@ -29,6 +33,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/liamniou/overseerr:latest
+            ghcr.io/liamniou/overseerr:${{ steps.version.outputs.tag }}
             ghcr.io/liamniou/overseerr:${{ github.sha }}
           build-args: |
             COMMIT_TAG=${{ github.sha }}
