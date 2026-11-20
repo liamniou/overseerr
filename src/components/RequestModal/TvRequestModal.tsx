@@ -5,9 +5,11 @@ import type { RequestOverrides } from '@app/components/RequestModal/AdvancedRequ
 import AdvancedRequester from '@app/components/RequestModal/AdvancedRequester';
 import QuotaDisplay from '@app/components/RequestModal/QuotaDisplay';
 import SearchByNameModal from '@app/components/RequestModal/SearchByNameModal';
+import UnreleasedWarning from '@app/components/RequestModal/UnreleasedWarning';
 import useSettings from '@app/hooks/useSettings';
 import { useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
+import { getTvUnreleasedInfo } from '@app/utils/releaseHelpers';
 import { ANIME_KEYWORD_ID } from '@server/api/themoviedb/constants';
 import { MediaRequestStatus, MediaStatus } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
@@ -371,6 +373,17 @@ const TvRequestModal = ({
 
   const isOwner = editRequest && editRequest.requestedBy.id === user?.id;
 
+  const unreleased =
+    data && !editRequest
+      ? getTvUnreleasedInfo(
+          data,
+          (settings.currentSettings.partialRequestsEnabled
+            ? selectedSeasons
+            : unrequestedSeasons
+          ).filter((season) => season !== 0)
+        )
+      : undefined;
+
   return data && !error && !data.externalIds.tvdbId && searchModal.show ? (
     <SearchByNameModal
       tvdbId={tvdbId}
@@ -465,6 +478,15 @@ const TvRequestModal = ({
               username: editRequest?.requestedBy.displayName,
             })
         : null}
+      {data && unreleased && (
+        <UnreleasedWarning
+          mediaType="tv"
+          title={data.name}
+          tmdbId={data.id}
+          date={unreleased.date}
+          seasons={unreleased.seasons}
+        />
+      )}
       {hasPermission(
         [
           Permission.MANAGE_REQUESTS,

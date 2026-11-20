@@ -3,8 +3,10 @@ import Modal from '@app/components/Common/Modal';
 import type { RequestOverrides } from '@app/components/RequestModal/AdvancedRequester';
 import AdvancedRequester from '@app/components/RequestModal/AdvancedRequester';
 import QuotaDisplay from '@app/components/RequestModal/QuotaDisplay';
+import UnreleasedWarning from '@app/components/RequestModal/UnreleasedWarning';
 import { useUser } from '@app/hooks/useUser';
 import globalMessages from '@app/i18n/globalMessages';
+import { getMovieUnreleasedInfo } from '@app/utils/releaseHelpers';
 import { MediaStatus } from '@server/constants/media';
 import type { MediaRequest } from '@server/entity/MediaRequest';
 import type { QuotaResponse } from '@server/interfaces/api/userInterfaces';
@@ -312,6 +314,8 @@ const MovieRequestModal = ({
     { type: 'or' }
   );
 
+  const unreleased = data ? getMovieUnreleasedInfo(data) : undefined;
+
   return (
     <Modal
       loading={(!data && !error) || !quota}
@@ -333,6 +337,15 @@ const MovieRequestModal = ({
       okButtonType={'primary'}
       backdrop={`https://image.tmdb.org/t/p/w1920_and_h800_multi_faces/${data?.backdropPath}`}
     >
+      {data && unreleased && (
+        <UnreleasedWarning
+          mediaType="movie"
+          title={data.title}
+          tmdbId={data.id}
+          date={unreleased.date}
+          dateType={unreleased.dateType}
+        />
+      )}
       {hasAutoApprove && !quota?.movie.restricted && (
         <div className="mt-6">
           <Alert
